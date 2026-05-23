@@ -11,102 +11,80 @@ use Zabbix\Widgets\Fields\CWidgetFieldTextBox;
 class WidgetForm extends CWidgetForm {
     private const SOURCE_MANUAL = 0;
     private const SOURCE_ITEM = 1;
-    private const CARD_LANGUAGE_AUTO = 0;
-    private const CARD_LANGUAGE_ZH_CN = 1;
-    private const CARD_LANGUAGE_EN_US = 2;
-    private const PORT_CARD_LABEL_NAME = 0;
-    private const PORT_CARD_LABEL_DESCRIPTION = 1;
-    private const THEME_FOLLOW_ZABBIX = 0;
-    private const THEME_LIGHT = 1;
-    private const THEME_DARK = 2;
-    private const DEFAULT_ROW_COUNT = 2;
-    private const DEFAULT_PORTS_PER_ROW = 12;
-    private const DEFAULT_TRAFFIC_IN_PATTERN = 'net.if.in[*]';
-    private const DEFAULT_TRAFFIC_OUT_PATTERN = 'net.if.out[*]';
-    private const DEFAULT_SPEED_PATTERN = 'net.if.speed[*]';
-    private const DEFAULT_STATUS_PATTERN = 'net.if.status[*]';
-    private const MAX_ROW_COUNT = 6;
-    private const MAX_PORTS_PER_ROW = 24;
-    private const MAX_TOTAL_PORTS = 96;
+    private const MAX_HEADER_ITEMS = 6;
 
     public function addFields(): self {
+        // Выбор хоста (опционально)
         $this->addField(
-            (new CWidgetFieldMultiSelectHost('hostids', _('Host')))
+            (new CWidgetFieldMultiSelectHost('hostids', _('Host (optional)')))
                 ->setMultiple(false)
         );
 
+        // Поля для шапки виджета
         $this->addField(
-            (new CWidgetFieldSelect('switch_brand_source', _('Brand source'), [
-                self::SOURCE_MANUAL => _('Manual text'),
-                self::SOURCE_ITEM => _('Item value')
-            ]))->setDefault(self::SOURCE_MANUAL)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('switch_brand', _('Brand')))
-                ->setDefault('EDGECORE')
-        );
-        $this->addField(
-            (new CWidgetFieldMultiSelectItem('switch_brand_itemids', _('Brand item')))
-                ->setMultiple(false)
-        );
-        $this->addField(
-            (new CWidgetFieldSelect('switch_model_source', _('Model source'), [
-                self::SOURCE_MANUAL => _('Manual text'),
-                self::SOURCE_ITEM => _('Item value')
-            ]))->setDefault(self::SOURCE_MANUAL)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('switch_model', _('Model')))
-                ->setDefault('S5850-48T4Q')
-        );
-        $this->addField(
-            (new CWidgetFieldMultiSelectItem('switch_model_itemids', _('Model item')))
-                ->setMultiple(false)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('switch_role', _('Role label')))
-                ->setDefault('Campus Aggregation')
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('row_count', _('Rows')))
-                ->setDefault((string) self::DEFAULT_ROW_COUNT)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('traffic_in_item_pattern', _('Traffic in item pattern')))
-                ->setDefault(self::DEFAULT_TRAFFIC_IN_PATTERN)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('traffic_out_item_pattern', _('Traffic out item pattern')))
-                ->setDefault(self::DEFAULT_TRAFFIC_OUT_PATTERN)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('speed_item_pattern', _('Speed item pattern')))
-                ->setDefault(self::DEFAULT_SPEED_PATTERN)
-        );
-        $this->addField(
-            (new CWidgetFieldTextBox('status_item_pattern', _('Status item pattern')))
-                ->setDefault(self::DEFAULT_STATUS_PATTERN)
+            (new CWidgetFieldTextBox('header_title', _('Header title')))
+                ->setDefault('ЦОД: Сводка')
         );
 
+        for ($i = 1; $i <= self::MAX_HEADER_ITEMS; $i++) {
+            $this->addField(
+                (new CWidgetFieldMultiSelectItem('header_itemids_' . $i, sprintf(_('Header item #%d'), $i)))
+                    ->setMultiple(false)
+            );
+            $this->addField(
+                (new CWidgetFieldTextBox('header_label_' . $i, sprintf(_('Header label #%d'), $i)))
+                    ->setDefault('')
+            );
+        }
+
+        // Идентификация узлов
+        $this->addField(
+            (new CWidgetFieldTextBox('node_tag', _('Node tag (host tag)')))
+                ->setDefault('role:node')
+        );
+
+        // Ключи элементов на каждый узел
+        $this->addField(
+            (new CWidgetFieldTextBox('item_key_availability', _('Availability item key pattern')))
+                ->setDefault('icmp.ping[*]')
+        );
+        $this->addField(
+            (new CWidgetFieldTextBox('item_key_traffic', _('Traffic item key pattern')))
+                ->setDefault('net.if.in[*]')
+        );
+        $this->addField(
+            (new CWidgetFieldTextBox('item_key_temperature', _('Temperature item key pattern')))
+                ->setDefault('sensor.temp[*]')
+        );
+
+        // Настройка сетки (используем TextBox вместо IntegerBox для совместимости)
+        $this->addField(
+            (new CWidgetFieldTextBox('rack_width', _('Rack width (columns)')))
+                ->setDefault('5')
+        );
+        $this->addField(
+            (new CWidgetFieldTextBox('rack_height', _('Rack height (rows)')))
+                ->setDefault('6')
+        );
+        $this->addField(
+            (new CWidgetFieldTextBox('number_of_racks', _('Number of racks')))
+                ->setDefault('10')
+        );
+
+        // Общие настройки
         $this->addField(
             (new CWidgetFieldSelect('visual_theme', _('Theme'), [
-                self::THEME_FOLLOW_ZABBIX => _('Follow Zabbix'),
-                self::THEME_LIGHT => _('Light'),
-                self::THEME_DARK => _('Dark')
-            ]))->setDefault(self::THEME_FOLLOW_ZABBIX)
+                0 => _('Follow Zabbix'),
+                1 => _('Light'),
+                2 => _('Dark')
+            ]))->setDefault(0)
         );
         $this->addField(
             (new CWidgetFieldSelect('card_language', _('Card language'), [
-                self::CARD_LANGUAGE_AUTO => _('Follow Zabbix'),
-                self::CARD_LANGUAGE_ZH_CN => _('Chinese'),
-                self::CARD_LANGUAGE_EN_US => _('English')
-            ]))->setDefault(self::CARD_LANGUAGE_AUTO)
-        );
-        $this->addField(
-            (new CWidgetFieldSelect('port_card_label_mode', _('Port card label'), [
-                self::PORT_CARD_LABEL_NAME => _('Port name'),
-                self::PORT_CARD_LABEL_DESCRIPTION => _('Port description')
-            ]))->setDefault(self::PORT_CARD_LABEL_NAME)
+                0 => _('Follow Zabbix'),
+                1 => _('Chinese'),
+                2 => _('English')
+            ]))->setDefault(0)
         );
         $this->addField(
             (new CWidgetFieldSelect('panel_scale', _('Panel size'), [
@@ -115,29 +93,6 @@ class WidgetForm extends CWidgetForm {
                 84 => _('Compact')
             ]))->setDefault(92)
         );
-
-        for ($i = 1; $i <= self::MAX_TOTAL_PORTS; $i++) {
-            $this->addField(
-                (new CWidgetFieldTextBox('port'.$i.'_name', sprintf(_('Port %d label'), $i)))
-                    ->setDefault('')
-            );
-            $this->addField(
-                (new CWidgetFieldTextBox('port'.$i.'_triggerid', sprintf(_('Port %d trigger'), $i)))
-                    ->setDefault('')
-            );
-            $this->addField(
-                (new CWidgetFieldTextBox('port'.$i.'_default_color', sprintf(_('Port %d idle color'), $i)))
-                    ->setDefault('#64748B')
-            );
-            $this->addField(
-                (new CWidgetFieldTextBox('port'.$i.'_ok_color', sprintf(_('Port %d ok color'), $i)))
-                    ->setDefault('#34D399')
-            );
-            $this->addField(
-                (new CWidgetFieldTextBox('port'.$i.'_problem_color', sprintf(_('Port %d problem color'), $i)))
-                    ->setDefault('#FB7185')
-            );
-        }
 
         return $this;
     }

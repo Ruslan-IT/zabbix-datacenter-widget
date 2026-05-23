@@ -1,44 +1,46 @@
 <?php declare(strict_types = 1);
 
 $form = new CWidgetFormView($data);
-$selected_hostid = getSelectedHostId($data['fields']);
 
-$port_count = 0;
-foreach (array_keys($data['fields']) as $field_name) {
-    if (preg_match('/^port(\d+)_name$/', $field_name, $matches) === 1) {
-        $port_count = max($port_count, (int) $matches[1]);
+// Выводим все поля, которые были добавлены в WidgetForm, в порядке добавления
+$fields_order = [
+    'hostids',
+    'header_title',
+    'header_itemids_1', 'header_label_1',
+    'header_itemids_2', 'header_label_2',
+    'header_itemids_3', 'header_label_3',
+    'header_itemids_4', 'header_label_4',
+    'header_itemids_5', 'header_label_5',
+    'header_itemids_6', 'header_label_6',
+    'node_tag',
+    'item_key_availability',
+    'item_key_traffic',
+    'item_key_temperature',
+    'rack_width',
+    'rack_height',
+    'number_of_racks',
+    'visual_theme',
+    'card_language',
+    'panel_scale'
+];
+
+foreach ($fields_order as $field_name) {
+    if (isset($data['fields'][$field_name])) {
+        $field = $data['fields'][$field_name];
+        // Для MultiSelectItem нужно создать view и добавить в форму
+        if (strpos($field_name, 'header_itemids_') === 0) {
+            $form->addField(new CWidgetFieldMultiSelectItemView($field));
+        } elseif ($field_name === 'hostids') {
+            $form->addField(new CWidgetFieldMultiSelectHostView($field));
+        } elseif (in_array($field_name, ['visual_theme', 'card_language', 'panel_scale'])) {
+            $form->addField(new CWidgetFieldSelectView($field));
+        } else {
+            $form->addField(new CWidgetFieldTextBoxView($field));
+        }
     }
 }
 
-$form->addField(new CWidgetFieldMultiSelectHostView($data['fields']['hostids']));
-$form->addFieldsGroup(getMetadataFieldsGroupView($data['fields'], 'switch_brand', _('Brand'), $selected_hostid));
-$form->addFieldsGroup(getMetadataFieldsGroupView($data['fields'], 'switch_model', _('Model'), $selected_hostid));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['switch_role']));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['row_count']));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['traffic_in_item_pattern']));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['traffic_out_item_pattern']));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['speed_item_pattern']));
-$form->addField(new CWidgetFieldTextBoxView($data['fields']['status_item_pattern']));
-$form->addField(new CWidgetFieldSelectView($data['fields']['visual_theme']));
-$form->addField(new CWidgetFieldSelectView($data['fields']['card_language']));
-$form->addField(new CWidgetFieldSelectView($data['fields']['port_card_label_mode']));
-$form->addField(new CWidgetFieldSelectView($data['fields']['panel_scale']));
-
-for ($i = 1; $i <= $port_count; $i++) {
-    $fieldset = (new CWidgetFormFieldsetCollapsibleView(sprintf(_('Port %d'), $i)))
-        ->addClass('switchpanel-port-fieldset')
-        ->setAttribute('data-port-index', (string) $i);
-
-    $fieldset
-        ->addField(new CWidgetFieldTextBoxView($data['fields']['port'.$i.'_name']))
-        ->addField(new CWidgetFieldTextBoxView($data['fields']['port'.$i.'_triggerid']))
-        ->addField(new CWidgetFieldTextBoxView($data['fields']['port'.$i.'_default_color']))
-        ->addField(new CWidgetFieldTextBoxView($data['fields']['port'.$i.'_ok_color']))
-        ->addField(new CWidgetFieldTextBoxView($data['fields']['port'.$i.'_problem_color']));
-
-    $form->addFieldset($fieldset);
-}
-
+// Добавляем JavaScript инициализации (если есть)
 $widget_edit_js = file_get_contents(__DIR__.'/../assets/js/widget.edit.js');
 if ($widget_edit_js !== false) {
     $form->addJavaScript($widget_edit_js);
@@ -46,41 +48,3 @@ if ($widget_edit_js !== false) {
 $form->addJavaScript('window.switch_panel_widget_form.init();');
 
 $form->show();
-
-function getMetadataFieldsGroupView(array $fields, string $prefix, string $label, int $selected_hostid): CWidgetFieldsGroupView {
-    return (new CWidgetFieldsGroupView($label))
-        ->addField(
-            (new CWidgetFieldSelectView($fields[$prefix.'_source']))
-                ->removeLabel()
-                ->addClass('switchpanel-inline-control switchpanel-meta-source')
-        )
-        ->addField(
-            (new CWidgetFieldTextBoxView($fields[$prefix]))
-                ->removeLabel()
-                ->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
-                ->addClass('switchpanel-inline-control switchpanel-meta-manual')
-        )
-        ->addField(
-            (new CWidgetFieldMultiSelectItemView($fields[$prefix.'_itemids']))
-                ->removeLabel()
-                ->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
-                ->setPopupParameter('hostid', $selected_hostid)
-                ->setPopupParameter('hide_host_filter', $selected_hostid > 0)
-                ->addClass('switchpanel-inline-control switchpanel-meta-item')
-        )
-        ->addRowClass('switchpanel-meta-group');
-}
-
-function getSelectedHostId(array $fields): int {
-    if (!array_key_exists('hostids', $fields) || !method_exists($fields['hostids'], 'getValue')) {
-        return 0;
-    }
-
-    $value = $fields['hostids']->getValue();
-    if (is_array($value)) {
-        $first = reset($value);
-        return $first !== false && ctype_digit((string) $first) ? (int) $first : 0;
-    }
-
-    return ctype_digit((string) $value) ? (int) $value : 0;
-}
