@@ -1,9 +1,9 @@
 {
   "manifest_version": 2.0,
-  "id": "switchpanel",
+  "id": "datacenter_widget",
   "type": "widget",
-  "name": "Switch Panel",
-  "namespace": "SwitchPanelWidget",
+  "name": "ЦОД: Мониторинг узлов",
+  "namespace": "DataCenterWidget",
   "version": "0.0.2",
   "author": "canghai809",
   "description": "Modern switch-style dashboard widget with per-port trigger states.",
