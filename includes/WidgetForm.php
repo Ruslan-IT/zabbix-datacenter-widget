@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace Modules\SwitchPanelWidget\Includes;
+namespace Modules\DataCenterWidget\Includes;
 
 use Zabbix\Widgets\CWidgetForm;
 use Zabbix\Widgets\Fields\CWidgetFieldMultiSelectHost;

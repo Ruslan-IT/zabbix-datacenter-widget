@@ -1,13 +1,13 @@
 <?php declare(strict_types = 1);
 
-namespace Modules\SwitchPanelWidget\Actions;
+namespace Modules\DataCenterWidget\Actions;
 
 use API;
 use CValueMapHelper;
 use CControllerDashboardWidgetView;
 use CControllerResponseData;
 use CWebUser;
-use Modules\SwitchPanelWidget\Includes\PortDiscovery;
+use Modules\DataCenterWidget\Includes\PortDiscovery;
 
 class WidgetView extends CControllerDashboardWidgetView {
     private const SOURCE_MANUAL = 0;

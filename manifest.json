@@ -4,15 +4,15 @@
   "type": "widget",
   "name": "ЦОД: Мониторинг узлов",
   "namespace": "DataCenterWidget",
-  "version": "0.0.2",
-  "author": "canghai809",
-  "description": "Modern switch-style dashboard widget with per-port trigger states.",
-  "url": "https://github.com/canghai908/zabbix-widget-switch",
+  "version": "1.0.0",
+  "author": "Ruslan",
+  "description": "Виджет для отображения статуса узлов в ЦОД",
+  "url": "https://github.com/Ruslan-IT/zabbix-datacenter-widget",
   "actions": {
-    "widget.switchpanel.view": {
+    "widget.datacenterwidget.view": {
       "class": "WidgetView"
     },
-    "widget.switchpanel.triggers": {
+    "widget.datacenterwidget.triggers": {
       "class": "WidgetTriggers"
     }
   }

@@ -1,11 +1,11 @@
 <?php declare(strict_types = 1);
 
-namespace Modules\SwitchPanelWidget\Actions;
+namespace Modules\DataCenterWidget\Actions;
 
 use API;
 use CController;
 use CControllerResponseData;
-use Modules\SwitchPanelWidget\Includes\PortDiscovery;
+use Modules\DataCenterWidget\Includes\PortDiscovery;
 
 class WidgetTriggers extends CController {
     private const DEFAULT_TRAFFIC_IN_PATTERN = 'net.if.in[*]';
